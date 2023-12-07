@@ -16,6 +16,14 @@ def aparcados_mal(*args):
                     return False
     return True
 
+def maniobrabilidad_filas_extremo(a,b):
+    if b != 'vacia':
+        return False
+
+def maniobrabilidad_el_resto(a,b,c):
+    if b != 'vacia'or c != 'vacia':
+        return False
+
 
 # main
 # -----------------------------------------------------------------------------
@@ -50,9 +58,35 @@ if __name__ == '__main__':
     problem.addConstraint(aparcados_mal,('4.1','4.2','4.3','4.4','4.5','4.6'))
     problem.addConstraint(aparcados_mal,('5.1','5.2','5.3','5.4','5.5','5.6'))
 
-    solution = problem.getSolution()
-
-    print("Solución encontrada:")
-    print(solution)
     
+    for filas in range(len(plazas_variables)):
+        for columnas in range(len(plazas_variables[filas])):
+            plaza_actual = plazas_variables[filas][columnas]
+            if plaza_actual != 'vacia': 
+                if filas == 0:    
+                    plaza_abajo = plazas_variables[filas+1][columnas]
+                    problem.addConstraint(maniobrabilidad_filas_extremo, (plaza_actual,plaza_abajo))
+                elif filas == 4:
+                    plaza_arriba = plazas_variables[filas-1][columnas]
+                    problem.addConstraint(maniobrabilidad_filas_extremo, (plaza_actual,plaza_arriba))
+                else:
+                    plaza_abajo1 = plazas_variables[filas+1][columnas]
+                    plaza_arriba1 = plazas_variables[filas-1][columnas]
+                    problem.addConstraint(maniobrabilidad_el_resto, (plaza_actual,plaza_abajo1, plaza_arriba1))
+
+    # compute t h e s o l u t i o n
+    #solutions=problem.getSolutions()
+    # compute one s o l u t i o n
+    solution = problem.getSolution()
+    print(problem.getSolution())
+    print(len(problem.getSolutions()))
+            
+    
+    
+    
+    
+    
+    
+    
+
     
