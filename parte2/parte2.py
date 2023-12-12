@@ -222,6 +222,7 @@ def A_estrella(datos, parking, dimensiones):
     coste_total = 0
 
     while len(hojaRuta[0]) != 0 or vehiculo.posicionActual != parking:
+        print(coste_total)
         if len(hojaRuta[0]) != 0:
             camino = distanciaMinima(datos, dimensiones, vehiculo.posicionActual)
             cercano = lugarMasCercano(camino, hojaRuta[1], hojaRuta[2], hojaRuta[3], hojaRuta[4])
@@ -234,71 +235,54 @@ def A_estrella(datos, parking, dimensiones):
                 if len(rutaContagiados) == 0:
                     if vehiculo.posicionActual != parking:
                         hospital = hojaRuta[4] 
-                        costeHospital = cercano[2][0]
+                        costeHospital = cercano[3][0]
                         nuevoEstado = hospital[0]
                         distanciaSeguridad = distanciaMinima(datos, dimensiones, nuevoEstado)
                         costeVolverDelHospitalNoContagiados = 0
                         for elemento in distanciaSeguridad:
                             if elemento[1][0] == parking[0] and elemento[1][1] == parking[1]:
                                 costeVolverDelHospitalNoContagiados = elemento[0]
-                        costeFuturo = vehiculo.energia - cercano[2][0] 
+                        costeFuturo = vehiculo.energia - cercano[3][0] 
                         if costeVolverDelHospitalNoContagiados <= costeFuturo:
-                            vuelta = distanciaMinima(datos, dimensiones, vehiculo.posicionActual)
-                            costeVolverAlParking = 0
-                            for elemento in vuelta:
-                                if elemento[1][0] == parking[0] and elemento[1][1] == parking[1]:
-                                    costeVolverAlParking = elemento[0]
-                            distanciaDesdeParking = distanciaMinima(datos, dimensiones, parking)
-                            costeParkingHospital = 0
-                            for elemento in distanciaDesdeParking:
-                                if elemento[1][0] == nuevoEstado[0] and elemento[1][1] == nuevoEstado[1]:
-                                    costeParkingHospital = elemento[0]
-
-                            print("coste al parking",costeVolverAlParking)
-                            Paciente_Hospital_Parking = costeVolverDelHospitalNoContagiados + costeHospital
-                            print("Paciente_Hospital_Parking", Paciente_Hospital_Parking)
-                            Paciente_Parking_Hospital = costeVolverAlParking + costeParkingHospital
-                            print("Paciente_Parking_Hospital", Paciente_Parking_Hospital)
-
                             vehiculo.energia -= costeHospital
                             coste_total += costeHospital
                             rutaNoContagiados.clear()
                             ruta.clear()
                             vehiculo.posicionActual = nuevoEstado
-                            print("el coste al hospital:",cercano[2][0])
+                            print("el coste al hospital:",cercano[3][0])
                             print("el coste futuro es.",costeFuturo)
                             print("el coste de volver es.",costeVolverDelHospitalNoContagiados)
                         else:
                             vehiculo.energia = 50
                             coste_total += costeVolverDelHospitalNoContagiados
                             vehiculo.posicionActual = parking
-                            print("el coste al cercano:",cercano[2][0])
+                            print("el coste al cercano:",cercano[3][0])
                             print("el coste futuro es.",costeFuturo)
                             print("el coste de volver es.",costeVolverDelHospitalNoContagiados)
                     else:
                         hospital = hojaRuta[4] 
-                        costeHospital = cercano[2][0]
+                        costeHospital = cercano[3][0]
                         nuevoEstado = hospital[0]
                         vehiculo.energia -= costeHospital
                         coste_total += costeHospital
                         rutaNoContagiados.clear()
                         ruta.clear()
                         vehiculo.posicionActual = nuevoEstado
-                        print("el coste al hospital:",cercano[2][0])
+                        print("el coste al hospital:",cercano[3][0])
                         print("el coste futuro es.",costeFuturo)
                         print("el coste de volver es.",costeVolver1)
 
                 else:
                     if vehiculo.posicionActual != parking:
                         hospital = hojaRuta[3] 
-                        costeHospital = cercano[3][0]
+                        costeHospital = cercano[2][0]
                         nuevoEstado = hospital[0]
                         distanciaSeguridad = distanciaMinima(datos, dimensiones, nuevoEstado)
                         costeVolver1 = 0
                         for elemento in distanciaSeguridad:
                             if elemento[1][0] == parking[0] and elemento[1][1] == parking[1]:
                                 costeVolver1 = elemento[0]
-                        costeFuturo = vehiculo.energia - cercano[3][0] 
+                        costeFuturo = vehiculo.energia - cercano[2][0] 
                         if costeVolver1 <= costeFuturo:
                             vehiculo.energia -= costeHospital
                             coste_total += costeHospital
@@ -307,19 +291,19 @@ def A_estrella(datos, parking, dimensiones):
                                     ruta.remove(pasajeros)
                             rutaContagiados.clear()
                             vehiculo.posicionActual = nuevoEstado
-                            print("el coste al hospital:",cercano[3][0])
+                            print("el coste al hospital:",cercano[2][0])
                             print("el coste futuro es.",costeFuturo)
                             print("el coste de volver es.",costeVolver1)
                         else:
                             vehiculo.energia = 50
                             coste_total += costeVolver1
                             vehiculo.posicionActual = parking
-                            print("el coste al hospital:",cercano[3][0])
+                            print("el coste al hospital:",cercano[2][0])
                             print("el coste futuro es.",costeFuturo)
                             print("el coste de volver es.",costeVolver1)
                     else:
                         hospital = hojaRuta[3] 
-                        costeHospital = cercano[3][0]
+                        costeHospital = cercano[2][0]
                         nuevoEstado = hospital[0]
                         vehiculo.energia -= costeHospital
                         coste_total += costeHospital
@@ -328,7 +312,7 @@ def A_estrella(datos, parking, dimensiones):
                                 ruta.remove(pasajeros)
                         rutaContagiados.clear()
                         vehiculo.posicionActual = nuevoEstado
-                        print("el coste al hospital:",cercano[3][0])
+                        print("el coste al hospital:",cercano[2][0])
                         print("el coste futuro es.",costeFuturo)
                         print("el coste de volver es.",costeVolver1)
 
@@ -413,6 +397,7 @@ def A_estrella(datos, parking, dimensiones):
                                 vehiculo.posicionActual = nuevoEstado
                                 ruta.append(vehiculo.posicionActual)
                                 vehiculo.energia -= contagiadoMasCercano[0]
+                                coste_total += costeVolver1
                                 print("el coste al cercano:",contagiadoMasCercano[0])
                                 print("el coste futuro es.",costeFuturo)
                                 print("el coste de volver es.",costeVolver1)
@@ -425,14 +410,14 @@ def A_estrella(datos, parking, dimensiones):
                                 print("el coste de volver es.",costeVolver1)
                     else: 
                         hospital = hojaRuta[3] 
-                        costeHospital = cercano[3][0]
+                        costeHospital = cercano[2][0]
                         nuevoEstado = hospital[0]
                         distanciaSeguridad = distanciaMinima(datos, dimensiones, nuevoEstado)
                         costeVolver1 = 0
                         for elemento in distanciaSeguridad:
                             if elemento[1][0] == parking[0] and elemento[1][1] == parking[1]:
                                 costeVolver1 = elemento[0]
-                        costeFuturo = vehiculo.energia - cercano[3][0] 
+                        costeFuturo = vehiculo.energia - cercano[2][0] 
                         if costeVolver1 <= costeFuturo:
                             vehiculo.energia -= costeHospital
                             coste_total += costeHospital
@@ -441,27 +426,27 @@ def A_estrella(datos, parking, dimensiones):
                                     ruta.remove(pasajeros)
                             rutaContagiados.clear()
                             vehiculo.posicionActual = nuevoEstado
-                            print("el coste al hospital:",cercano[3][0])
+                            print("el coste al hospital:",cercano[2][0])
                             print("el coste futuro es.",costeFuturo)
                             print("el coste de volver es.",costeVolver1)
                         else:
                             vehiculo.energia = 50
                             coste_total += costeVolver1
                             vehiculo.posicionActual = parking 
-                            print("el coste al hospital:",cercano[3][0])
+                            print("el coste al hospital:",cercano[2][0])
                             print("el coste futuro es.",costeFuturo)
                             print("el coste de volver es.",costeVolver1)
                     
                 else: 
                     hospital = hojaRuta[3] 
-                    costeHospital = cercano[3][0]
+                    costeHospital = cercano[2][0]
                     nuevoEstado = hospital[0]
                     distanciaSeguridad = distanciaMinima(datos, dimensiones, nuevoEstado)
                     costeVolver1 = 0
                     for elemento in distanciaSeguridad:
                         if elemento[1][0] == parking[0] and elemento[1][1] == parking[1]:
                             costeVolver1 = elemento[0]
-                    costeFuturo = vehiculo.energia - cercano[3][0] 
+                    costeFuturo = vehiculo.energia - cercano[2][0] 
                     if costeVolver1 <= costeFuturo:
                         vehiculo.energia -= costeHospital
                         coste_total += costeHospital
@@ -470,14 +455,14 @@ def A_estrella(datos, parking, dimensiones):
                                 ruta.remove(pasajeros)
                         rutaContagiados.clear()
                         vehiculo.posicionActual = nuevoEstado
-                        print("el coste al hospital:",cercano[3][0])
+                        print("el coste al hospital:",cercano[2][0])
                         print("el coste futuro es.",costeFuturo)
                         print("el coste de volver es.",costeVolver1)
                     else:
                         vehiculo.energia = 50
                         coste_total += costeVolver1
                         vehiculo.posicionActual = parking 
-                        print("el coste al hospital:",cercano[3][0])
+                        print("el coste al hospital:",cercano[2][0])
                         print("el coste futuro es.",costeFuturo)
                         print("el coste de volver es.",costeVolver1)
 
@@ -500,31 +485,6 @@ def A_estrella(datos, parking, dimensiones):
             else:
                 if len(rutaContagiados) == 0:
                     hospital = hojaRuta[4] 
-                    costeHospital = cercano[2][0]
-                    nuevoEstado = hospital[0]
-                    distanciaSeguridad = distanciaMinima(datos, dimensiones, nuevoEstado)
-                    costeVolver1 = 0
-                    for elemento in distanciaSeguridad:
-                        if elemento[1][0] == parking[0] and elemento[1][1] == parking[1]:
-                            costeVolver1 = elemento[0]
-                    costeFuturo = vehiculo.energia - cercano[2][0] 
-                    if costeVolver1 <= costeFuturo:
-                        vehiculo.energia -= costeHospital
-                        rutaNoContagiados.clear()
-                        ruta.clear()
-                        vehiculo.posicionActual = nuevoEstado
-                        print("el coste al hospital:",cercano[2][0])
-                        print("el coste futuro es.",costeFuturo)
-                        print("el coste de volver es.",costeVolver1)
-                    else:
-                        vehiculo.energia = 50
-                        coste_total += costeVolver1
-                        vehiculo.posicionActual = parking
-                        print("el coste al hospital:",cercano[2][0])
-                        print("el coste futuro es.",costeFuturo)
-                        print("el coste de volver es.",costeVolver1)
-                else:
-                    hospital = hojaRuta[3] 
                     costeHospital = cercano[3][0]
                     nuevoEstado = hospital[0]
                     distanciaSeguridad = distanciaMinima(datos, dimensiones, nuevoEstado)
@@ -535,10 +495,8 @@ def A_estrella(datos, parking, dimensiones):
                     costeFuturo = vehiculo.energia - cercano[3][0] 
                     if costeVolver1 <= costeFuturo:
                         vehiculo.energia -= costeHospital
-                        for pasajeros in ruta:
-                            if pasajeros in rutaContagiados:
-                                ruta.remove(pasajeros)
-                        rutaContagiados.clear()
+                        rutaNoContagiados.clear()
+                        ruta.clear()
                         vehiculo.posicionActual = nuevoEstado
                         print("el coste al hospital:",cercano[3][0])
                         print("el coste futuro es.",costeFuturo)
@@ -548,6 +506,33 @@ def A_estrella(datos, parking, dimensiones):
                         coste_total += costeVolver1
                         vehiculo.posicionActual = parking
                         print("el coste al hospital:",cercano[3][0])
+                        print("el coste futuro es.",costeFuturo)
+                        print("el coste de volver es.",costeVolver1)
+                else:
+                    hospital = hojaRuta[3] 
+                    costeHospital = cercano[2][0]
+                    nuevoEstado = hospital[0]
+                    distanciaSeguridad = distanciaMinima(datos, dimensiones, nuevoEstado)
+                    costeVolver1 = 0
+                    for elemento in distanciaSeguridad:
+                        if elemento[1][0] == parking[0] and elemento[1][1] == parking[1]:
+                            costeVolver1 = elemento[0]
+                    costeFuturo = vehiculo.energia - cercano[2][0] 
+                    if costeVolver1 <= costeFuturo:
+                        vehiculo.energia -= costeHospital
+                        for pasajeros in ruta:
+                            if pasajeros in rutaContagiados:
+                                ruta.remove(pasajeros)
+                        rutaContagiados.clear()
+                        vehiculo.posicionActual = nuevoEstado
+                        print("el coste al hospital:",cercano[2][0])
+                        print("el coste futuro es.",costeFuturo)
+                        print("el coste de volver es.",costeVolver1)
+                    else:
+                        vehiculo.energia = 50
+                        coste_total += costeVolver1
+                        vehiculo.posicionActual = parking
+                        print("el coste al hospital:",cercano[2][0])
                         print("el coste futuro es.",costeFuturo)
                         print("el coste de volver es.",costeVolver1)
 

@@ -67,7 +67,6 @@ def capacidad_maniobra_resto_plazas(b,c):
 
 if __name__ == '__main__':
     problem = constraint.Problem()
-
     valores_entrada=leer_fichero_entrada("parking01.txt")
     filas = valores_entrada[0]
     columnas=valores_entrada[1]
@@ -96,7 +95,7 @@ if __name__ == '__main__':
             plazas_posteriores = plazas[fila][columna + 1:]  # Obtener todas las plazas posteriores en la misma fila
             print("las siguientes plazas que tengo dlante son", plazas_posteriores)
             lista_plazas_comprobar = [plaza_actual]+list(plazas_posteriores)
-            problem.addConstraint(vehiculos_tsu_misma_fila, (tuple(lista_plazas_comprobar),)) #para pasarle el resto de casillas de la fila
+            problem.addConstraint(vehiculos_tsu_misma_fila, *(tuple(lista_plazas_comprobar),)) #para pasarle el resto de casillas de la fila
             
             #aplicar la restriccion 5, la plaza de la izquierda o derecha debe estar vacia
             if plaza_actual != 'vacia': 
