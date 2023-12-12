@@ -219,24 +219,42 @@ def A_estrella(datos, parking, dimensiones):
     rutaNoContagiados = vehiculo.llevandoNoContagiados
     coste_total = 0
 
-    while len(hojaRuta[0]) != 0 or vehiculo.posicionActual != parking:
+    while len(hojaRuta[0]) != 0 or vehiculo.posicionActual != list(parking) or len(rutaContagiados) != 0 or len(rutaNoContagiados) != 0:
         camino = distanciaMinima(datos, dimensiones, vehiculo.posicionActual)
         cercano = lugarMasCercano(camino, hojaRuta[1], hojaRuta[2], hojaRuta[3], hojaRuta[4])
-            
-        pacienteNoContagiado = cercano[0][0]
-        posicionPacienteNoContagiado = cercano[0][1]
-        pacienteContagiado = cercano[1][0]
-        posicionPacienteContagiado = cercano[1][1]
+
+        #para el  caso en el que ya no hay más pacientes No contagiados a recoger
+        if cercano[0] != 0: #si ya no hay más que recoger, no devolverá una tupla, si no un 0, indicando que ya no quedan más pacientes a recoger
+            pacienteNoContagiado = cercano[0][0] #esto lo iremos modificando para que se vayan actualizando los pesos
+            posicionPacienteNoContagiado = cercano[0][1]
+            costeRealPacienteNoContagiado = cercano[0][0] #pero este lo utilizaremos para sumar el coste total real
+        else: 
+            pacienteNoContagiado = 10000
+            posicionPacienteNoContagiado = parking
+            costeRealPacienteNoContagiado = 10000
+
+        if cercano[1] != 0:
+            pacienteContagiado = cercano[1][0]
+            posicionPacienteContagiado = cercano[1][1]
+            costeRealPacienteContagiado = cercano[1][0]
+        else:
+            pacienteContagiado = 10000
+            posicionPacienteContagiado = parking
+            costeRealPacienteContagiado = 10000
+
         hospitalContagiado = cercano[2][0]
+        costeRealHospitalContagiado = cercano[2][0]
         posicionHospitalContagiado = cercano[2][1]
         hospitalNoContagiado = cercano [3][0]
+        costeRealHospitalNoContagiado = cercano[3][0]
         posicionHospitalNoContagiado = cercano[3][1]
         distanciaActual = distanciaMinima(datos, dimensiones, vehiculo.posicionActual)
-        distanciaparking = 0
+        costeRealAlParking = 0
+        distanciaparking = costeRealAlParking
         posicionParking = list(parking)
         for elemento in distanciaActual:
             if elemento[1][0] == parking[0] and elemento[1][1] == parking[1]:
-                distanciaparking = elemento[0]
+                costeRealAlParking = elemento[0]
         #hasta aqui, se inicializan las 5 nodos que va a extender
 
         #heurística de que no coja la opción del parking si tiene mucha energía
@@ -352,13 +370,16 @@ def A_estrella(datos, parking, dimensiones):
         print("valor de ir al hospital Contagiado",hospitalContagiado)
         print("valor de ir al hospital No contagiado",hospitalNoContagiado)
         print("distancia al parking",distanciaparking)
+        print("el coste real de ir al paciente N es:", costeRealPacienteNoContagiado)
+        print("el coste real de ir al paciente C es:", costeRealPacienteContagiado)
+        print("el coste real de ir al hospital CN es:", costeRealHospitalNoContagiado)
+        print("el coste real de ir al hospital CC es:", costeRealHospitalContagiado)
+        print("el coste real de ir al parking es:", costeRealAlParking)                  
 
-                    
-
-        #en el caso de que opte por coger el paciente No contagiado
+        #en el caso de que opte por coger el paciente No contagiado, al declararse primero que lo contagiados, se le prioridad 
         if (pacienteNoContagiado <= min(pacienteContagiado, hospitalContagiado, hospitalNoContagiado, distanciaparking)):
                 vehiculo.energia -= pacienteNoContagiado #le resta a la energía lo que le cuesta ir hasta ella
-                coste_total += pacienteNoContagiado #y se lo suma a contador global
+                coste_total += costeRealPacienteNoContagiado #y se lo suma a contador global
                 vehiculo.posicionActual = posicionPacienteNoContagiado #el vehiculo se moverá a esa posición
                 hojaRuta[0].remove(posicionPacienteNoContagiado) #ya hemos pasado por el, asi que no tendremos que buscarlo más veces en la hojaRuta general
                 hojaRuta[1].remove(posicionPacienteNoContagiado) #tampoco en la hoja de ruta de los pacientes No contagiados
@@ -367,7 +388,7 @@ def A_estrella(datos, parking, dimensiones):
 
         elif (pacienteContagiado <= min(pacienteNoContagiado, hospitalContagiado, hospitalNoContagiado, distanciaparking)):
                 vehiculo.energia -= pacienteContagiado #le resta a la energía lo que le cuesta ir hasta ella
-                coste_total += pacienteContagiado #y se lo suma a contador global
+                coste_total += costeRealPacienteContagiado #y se lo suma a contador global
                 vehiculo.posicionActual = posicionPacienteContagiado #el vehiculo se moverá a esa posición
                 hojaRuta[0].remove(posicionPacienteContagiado) #ya hemos pasado por el, asi que no tendremos que buscarlo más veces en la hojaRuta general
                 hojaRuta[2].remove(posicionPacienteContagiado) #tampoco en la hoja de ruta de los pacientes contagiados
@@ -376,7 +397,7 @@ def A_estrella(datos, parking, dimensiones):
         
         elif (hospitalContagiado <= min(pacienteNoContagiado, pacienteContagiado, hospitalNoContagiado, distanciaparking)):
                 vehiculo.energia -= hospitalContagiado
-                coste_total += hospitalContagiado
+                coste_total += costeRealHospitalContagiado
                 for pasajeros in ruta:
                     if pasajeros in rutaContagiados:
                         ruta.remove(pasajeros)
@@ -385,14 +406,14 @@ def A_estrella(datos, parking, dimensiones):
 
         elif (hospitalNoContagiado <= min(pacienteNoContagiado, hospitalContagiado, pacienteContagiado, distanciaparking)):
                 vehiculo.energia -= hospitalNoContagiado
-                coste_total += hospitalNoContagiado
+                coste_total += costeRealHospitalNoContagiado
                 rutaNoContagiados.clear()
                 ruta.clear()
                 vehiculo.posicionActual = posicionHospitalNoContagiado
 
         elif (distanciaparking <= min(pacienteNoContagiado, hospitalContagiado, hospitalNoContagiado, pacienteContagiado)):
                 vehiculo.energia = 50
-                coste_total += distanciaparking
+                coste_total += costeRealAlParking
                 vehiculo.posicionActual = posicionParking
 
         
@@ -401,12 +422,15 @@ def A_estrella(datos, parking, dimensiones):
         print(posicionHospitalContagiado)
         print(posicionHospitalNoContagiado)
         print(posicionParking)
+        print("el coste total es", coste_total)
 
 
         print("lleva a :",ruta)  
         print("lleva no contagiados:",rutaNoContagiados)
         print("lleva contagiados:",rutaContagiados)
         print("la energia que queda es.",vehiculo.energia) 
+        print("me voy a mover a", vehiculo.posicionActual)
+        print("quedan por recoger", hojaRuta[0])
 
 
 
