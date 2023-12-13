@@ -336,8 +336,9 @@ def A_estrella(datos, parking, dimensiones):
         if costeFuturoHospitalContagiado < hospitalContagiado:
             hospitalContagiado += 1000
 
-
-
+        #restricción para que si quedan pocos pacientes a recoger, los recoja, y luego vaya al hospital
+        RecogidosNoContagiados = len(rutaNoContagiados)
+        print("ha recogido PacientesNoCOntagiados",RecogidosNoContagiados)
 
         #comprobación de si recoger a otro paciente le pilla de paso al hospital o no
         #los pongo en la comprobación de arriba
