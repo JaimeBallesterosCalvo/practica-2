@@ -1,5 +1,5 @@
 import csv
-
+import copy
 
 class Mapa:
     #se crea la clase mapa
@@ -96,10 +96,10 @@ class Mapa:
 
     def DistanciasCalculadas(self):
         mapaConDistancias = []
-        for fila in range(self.filas):
-            for columna in range(self.columnas):
+        for fila in range(self.filas+1):
+            for columna in range(self.columnas+1):
                 calculoDistancias = self.distanciaMinima([fila,columna])
-                posicion = (fila, columna)
+                posicion = [fila, columna]
                 union = (posicion, calculoDistancias)
                 mapaConDistancias.append(union)
         return mapaConDistancias
@@ -194,17 +194,25 @@ class Vehiculo:
                 elif estado == "P":
                     parking.append([contadorFila, contadorColumna ])
         totalPacientes=noContagiados+contagiados 
-        return totalPacientes, noContagiados, contagiados, hospitalContagiado, hospitalNoContagiado, parking
+        return [totalPacientes, noContagiados, contagiados, hospitalContagiado, hospitalNoContagiado, parking]
     
 #--------------------------funciones-----------------------------------------------------    
 #desarrollo de las funciones que iremos utilizando
 def buscarCoste(estado,distancias, posicionFinal):
     for fila in distancias:
-                for columna in fila:
-                    if columna[0] == estado[0]:
-                        for distancia in columna[1]:
-                            if distancia[1] == posicionFinal:
-                                costeCasilla = distancia[0]
+            #print("la primer posicion de la fila", fila[0])
+            #print("el estado es", estado[0])
+            if fila[0] == estado[0]:
+                #print("estoy en el if")
+                for columna in fila[1]:
+                    #print("la columna es",columna)
+                    #print("la fila es", fila[1])
+                    #print("la columna1",columna[1])
+                    #print("la posicion final", posicionFinal)
+                    if columna[1] == posicionFinal:
+                        #print("estoy en el if")
+                        costeCasilla = columna[0]
+    #print(costeCasilla)
     return costeCasilla
 
 def expandir(estado, distancias):
@@ -212,81 +220,148 @@ def expandir(estado, distancias):
     hojadeRuta = estado[5]
     ruta = estado[1]
     rutaContagiados = estado[2]
+    #print("cargamos los nodos que vamos a expandir:", expandidos)
+    #print("la hoja de ruta es:",hojadeRuta)
+    #print("los pacientes recogidos son:", ruta)
+    #print("los pacientes contagiados recogidos son:", rutaContagiados)
     if len(ruta) == 10: 
         if len(rutaContagiados) != 0:
-            costeCasillaHospitalContagiado = buscarCoste(estado, distancias, hojadeRuta[3])
+            costeCasillaHospitalContagiado = buscarCoste(estado, distancias, hojadeRuta[3][0])
             estadoHospitalContagiado = hojadeRuta[3], estado[3],[], estado[3], estado[4] - costeCasillaHospitalContagiado, estado[5], estado[6] + costeCasillaHospitalContagiado
             expandidos.append(estadoHospitalContagiado) #expandimos a hospitalContagiado
-            costeCasillaParking = buscarCoste(estado, distancias, hojadeRuta[5])
+
+            costeCasillaParking = buscarCoste(estado, distancias, hojadeRuta[5][0])
             estadoParking = hojadeRuta[5], estado[1],estado[2], estado[3], 50, estado[5], estado[6] + costeCasillaParking
             expandidos.append(estadoParking) #expandimos a parking
         else:
-            costeCasillaHospitalNoContagiado = buscarCoste(estado, distancias, hojadeRuta[4])
+            costeCasillaHospitalNoContagiado = buscarCoste(estado, distancias, hojadeRuta[4][0])
             estadoHospitalNoContagiado = hojadeRuta[4], [],[], [], estado[4] - costeCasillaHospitalNoContagiado, estado[5], estado[6] + costeCasillaHospitalNoContagiado
             expandidos.append(estadoHospitalNoContagiado) #expandimos a hospitalNoContagiado
 
-            costeCasillaParking = buscarCoste(estado, distancias, hojadeRuta[5])
+            costeCasillaParking = buscarCoste(estado, distancias, hojadeRuta[5][0])
             estadoParking = hojadeRuta[5], estado[1],estado[2], estado[3], 50, estado[5], estado[6] + costeCasillaParking
             expandidos.append(estadoParking) #expandimos a parking
+            
     
     else:
         if len(ruta) == 0:
+            print("me meto en el caso de que no hay pacientes en el vehiculo")
             for paciente in hojadeRuta[1]:#No contagiados
+                #print("los pacientes no contagiados son:", paciente)
+                #print("la hoja de ruta  es", hojadeRuta[1])
                 costeCasillaPacienteNoContagiado = buscarCoste(estado, distancias, paciente)
-                estadoPacienteNoContagiado = paciente, ruta +[paciente], estado[2], estado[3] + [paciente], estado[4]- costeCasillaPacienteNoContagiado, estado[5].remove(paciente), estado[6]+ costeCasillaPacienteNoContagiado
+                contador_i = -1
+                CopiaEstado5 = copy.deepcopy(estado[5])
+                for elemento in estado[5]:
+                    contador_i += 1
+                    contador_j = -1
+                    for paso in elemento:
+                        contador_j += 1
+                        if paso == paciente:
+                            del CopiaEstado5[contador_i][contador_j]
+                estadoPacienteNoContagiado = paciente, ruta +[paciente], estado[2], estado[3] + [paciente], estado[4]- costeCasillaPacienteNoContagiado, CopiaEstado5, estado[6]+ costeCasillaPacienteNoContagiado
+                #print("el estado que vamos a introducir es:", estadoPacienteNoContagiado)
                 expandidos.append(estadoPacienteNoContagiado)
 
             for paciente in hojadeRuta[2]:#contagiados
                 costeCasillaPacienteContagiado = buscarCoste(estado, distancias, paciente)
-                estadoPacienteContagiado = paciente, ruta +[paciente], estado[2] + [paciente], estado[3], estado[4]- costeCasillaPacienteContagiado, estado[5].remove(paciente), estado[6]+ costeCasillaPacienteContagiado
+                contador_i = -1
+                CopiaEstado5 = copy.deepcopy(estado[5])
+                for elemento in estado[5]:
+                    contador_i += 1
+                    contador_j = -1
+                    for paso in elemento:
+                        contador_j += 1
+                        if paso == paciente:
+                            del CopiaEstado5[contador_i][contador_j]
+                estadoPacienteContagiado = paciente, ruta +[paciente], estado[2] + [paciente], estado[3], estado[4]- costeCasillaPacienteContagiado, CopiaEstado5, estado[6]+ costeCasillaPacienteContagiado
+                #print("el estado que vamos a introducir es:", estadoPacienteContagiado)
                 expandidos.append(estadoPacienteContagiado)
 
-            
-
-            costeCasillaParking = buscarCoste(estado, distancias, hojadeRuta[5])
-            estadoParking = hojadeRuta[5], estado[1],estado[2], estado[3], 50, estado[5], estado[6] + costeCasillaParking
+            costeCasillaParking = buscarCoste(estado, distancias, hojadeRuta[5][0])
+            estadoParking = hojadeRuta[5][0], estado[1],estado[2], estado[3], 50, estado[5], estado[6] + costeCasillaParking
             expandidos.append(estadoParking) #expandimos a parking
+            print("salgo de este caso")
+            print("el estado del parking es", estadoParking)
+            print("expandidos",expandidos)
         else:
             if len(rutaContagiados) == 0:
+                print("me meto en el caso de en el que tengo un no contagiado")
                 for paciente in hojadeRuta[1]:#No contagiados
                     costeCasillaPacienteNoContagiado = buscarCoste(estado, distancias, paciente)
-                    estadoPacienteNoContagiado = paciente, ruta +[paciente], estado[2], estado[3] + [paciente], estado[4]- costeCasillaPacienteNoContagiado, estado[5].remove(paciente), estado[6]+ costeCasillaPacienteNoContagiado
+                    contador_i = -1
+                    CopiaEstado5 = copy.deepcopy(estado[5])
+                    #print("estado 5 ",estado[5])
+                    for elemento in estado[5]:
+                        contador_i += 1
+                        contador_j = -1
+                        for paso in elemento:
+                            contador_j += 1
+                            if paso == paciente:
+                                del CopiaEstado5[contador_i][contador_j]
+                    #print("estado 5 copiado borrado ",CopiaEstado5)
+                    estadoPacienteNoContagiado = paciente, ruta +[paciente], estado[2], estado[3] + [paciente], estado[4]- costeCasillaPacienteNoContagiado, CopiaEstado5, estado[6]+ costeCasillaPacienteNoContagiado
                     expandidos.append(estadoPacienteNoContagiado)
 
                 for paciente in hojadeRuta[2]:#contagiados
                     costeCasillaPacienteContagiado = buscarCoste(estado, distancias, paciente)
-                    estadoPacienteContagiado = paciente, ruta +[paciente], estado[2] + [paciente], estado[3], estado[4]- costeCasillaPacienteContagiado, estado[5].remove(paciente), estado[6]+ costeCasillaPacienteContagiado
+                    contador_i = -1
+                    CopiaEstado5 = copy.deepcopy(estado[5])
+                    #print("estado 5 ",estado[5])
+                    for elemento in estado[5]:
+                        contador_i += 1
+                        contador_j = -1
+                        for paso in elemento:
+                            contador_j += 1
+                            if paso == paciente:
+                                del CopiaEstado5[contador_i][contador_j]
+                    #print("estado 5 copiado borrado ",CopiaEstado5)
+                    estadoPacienteContagiado = paciente, ruta +[paciente], estado[2] + [paciente], estado[3], estado[4]- costeCasillaPacienteContagiado, CopiaEstado5, estado[6]+ costeCasillaPacienteContagiado
                     expandidos.append(estadoPacienteContagiado)
 
-                costeCasillaHospitalNoContagiado = buscarCoste(estado, distancias, hojadeRuta[4])
-                estadoHospitalNoContagiado = hojadeRuta[4], [],[], [], estado[4] - costeCasillaHospitalNoContagiado, estado[5], estado[6] + costeCasillaHospitalNoContagiado
+                costeCasillaHospitalNoContagiado = buscarCoste(estado, distancias, hojadeRuta[4][0])
+                estadoHospitalNoContagiado = hojadeRuta[4][0], [],[], [], estado[4] - costeCasillaHospitalNoContagiado, estado[5], estado[6] + costeCasillaHospitalNoContagiado
                 expandidos.append(estadoHospitalNoContagiado) #expandimos a hospitalNoContagiado
 
-                costeCasillaParking = buscarCoste(estado, distancias, hojadeRuta[5])
-                estadoParking = hojadeRuta[5], estado[1],estado[2], estado[3], 50, estado[5], estado[6] + costeCasillaParking
+                costeCasillaParking = buscarCoste(estado, distancias, hojadeRuta[5][0])
+                estadoParking = hojadeRuta[5][0], estado[1],estado[2], estado[3], 50, estado[5], estado[6] + costeCasillaParking
                 expandidos.append(estadoParking) #expandimos a parking
-            
+                print("salgo del caso en el que tengo pacientes no contagiados")
+                print("el estado del parking es", estadoParking)
+                print("expandidos",expandidos)
+
             if len(rutaContagiados) == 1:
                 for paciente in hojadeRuta[2]:#contagiados
                     costeCasillaPacienteContagiado = buscarCoste(estado, distancias, paciente)
-                    estadoPacienteContagiado = paciente, ruta +[paciente], estado[2] + [paciente], estado[3], estado[4]- costeCasillaPacienteContagiado, estado[5].remove(paciente), estado[6]+ costeCasillaPacienteContagiado
+                    contador_i = -1
+                    CopiaEstado5 = copy.deepcopy(estado[5])
+                    #print("estado 5 ",estado[5])
+                    for elemento in estado[5]:
+                        contador_i += 1
+                        contador_j = -1
+                        for paso in elemento:
+                            contador_j += 1
+                            if paso == paciente:
+                                del CopiaEstado5[contador_i][contador_j]
+                    #print("estado 5 copiado borrado ",CopiaEstado5)
+                    estadoPacienteContagiado = paciente, ruta +[paciente], estado[2] + [paciente], estado[3], estado[4]- costeCasillaPacienteContagiado, CopiaEstado5, estado[6]+ costeCasillaPacienteContagiado
                     expandidos.append(estadoPacienteContagiado)
 
-                costeCasillaHospitalContagiado = buscarCoste(estado, distancias, hojadeRuta[3])
-                estadoHospitalContagiado = hojadeRuta[3], estado[3],[], estado[3], estado[4] - costeCasillaHospitalContagiado, estado[5], estado[6] + costeCasillaHospitalContagiado
+                costeCasillaHospitalContagiado = buscarCoste(estado, distancias, hojadeRuta[3][0])
+                estadoHospitalContagiado = hojadeRuta[3][0], estado[3],[], estado[3], estado[4] - costeCasillaHospitalContagiado, estado[5], estado[6] + costeCasillaHospitalContagiado
                 expandidos.append(estadoHospitalContagiado) #expandimos a hospitalContagiado
 
-                costeCasillaParking = buscarCoste(estado, distancias, hojadeRuta[5])
-                estadoParking = hojadeRuta[5], estado[1],estado[2], estado[3], 50, estado[5], estado[6] + costeCasillaParking
+                costeCasillaParking = buscarCoste(estado, distancias, hojadeRuta[5][0])
+                estadoParking = hojadeRuta[5][0], estado[1],estado[2], estado[3], 50, estado[5], estado[6] + costeCasillaParking
                 expandidos.append(estadoParking) #expandimos a parking
             
             if len(rutaContagiados) == 2: 
-                costeCasillaHospitalContagiado = buscarCoste(estado, distancias, hojadeRuta[3])
-                estadoHospitalContagiado = hojadeRuta[3], estado[3],[], estado[3], estado[4] - costeCasillaHospitalContagiado, estado[5], estado[6] + costeCasillaHospitalContagiado
+                costeCasillaHospitalContagiado = buscarCoste(estado, distancias, hojadeRuta[3][0])
+                estadoHospitalContagiado = hojadeRuta[3][0], estado[3],[], estado[3], estado[4] - costeCasillaHospitalContagiado, estado[5], estado[6] + costeCasillaHospitalContagiado
                 expandidos.append(estadoHospitalContagiado) #expandimos a hospitalContagiado
 
-                costeCasillaParking = buscarCoste(estado, distancias, hojadeRuta[5])
-                estadoParking = hojadeRuta[5], estado[1],estado[2], estado[3], 50, estado[5], estado[6] + costeCasillaParking
+                costeCasillaParking = buscarCoste(estado, distancias, hojadeRuta[5][0])
+                estadoParking = hojadeRuta[5][0], estado[1],estado[2], estado[3], 50, estado[5], estado[6] + costeCasillaParking
                 expandidos.append(estadoParking) #expandimos a parking
     return expandidos
 
@@ -300,21 +375,33 @@ def A_estrella(datos,parking, dimensiones, distancias):
     abierta = []
     cerrada = []
     vehiculo = Vehiculo(datos, parking)
-    estadoInicial = vehiculo.posicionActual, vehiculo.pacientesVehiculo, vehiculo.llevandoContagiados, vehiculo.llevandoNoContagiados, vehiculo.energia, vehiculo.hojadeRuta, vehiculo.costeHastaAhora
+    estadoInicial = list(vehiculo.posicionActual), vehiculo.pacientesVehiculo, vehiculo.llevandoContagiados, vehiculo.llevandoNoContagiados, vehiculo.energia, vehiculo.hojadeRuta, vehiculo.costeHastaAhora
     estadoSiguiente = estadoInicial
     abierta.append(estadoInicial)
-    print(abierta)
-    while abierta != 0 or vehiculo.posicionActual != parking: 
+    while abierta != 0 or estadoSiguiente[0] != list(parking): 
         estadoActual = estadoSiguiente
+        print("siendo su estado actual",estadoActual)
         abierta.remove(estadoActual)
-        if estadoActual not in cerrada:
+        print("siendo su lista abierta", abierta)
+        print("siendo su lista cerrada", cerrada)
+        entrar  = 0
+        salir = 0
+        for estados in cerrada:
+            if estadoActual[0] == estados[0]:
+                entrar +=1
+                if estadoActual[0] == estados[5][3][0] or estadoActual[0] == estados[5][4][0] or estadoActual[0] == estados[5][5][0]:
+                    entrar -= 1
+                    salir += 1
+        print(entrar)
+        if entrar < 1:
+        #if estadoActual not in cerrada:
             vecinos = expandir(estadoActual, distancias)
             cerrada.append(estadoActual)
             for sucesor in vecinos:
                 if sucesor not in abierta and  sucesor not in cerrada:
                     abierta.append(sucesor)
                 elif sucesor in abierta:
-                    
+                    abierta.append(sucesor)
             
             #hacemos cosas
             estadoSiguiente = abierta[0]
@@ -354,7 +441,6 @@ def A_estrella(datos,parking, dimensiones, distancias):
 
 
 
-
 #--------------------------main-----------------------------------------------------    
 #aqui es donde ejecutaremos el programa
 if __name__ == '__main__':
@@ -362,6 +448,7 @@ if __name__ == '__main__':
     nombre_archivo = 'parte2/entrada2.csv'
     #creamos el mapa con ese archivo
     grafo = Mapa(nombre_archivo)
-    print(grafo.distancias)
-    #algoritmo = A_estrella(grafo.datos, grafo.parking, grafo.dimensiones, grafo.distancias)
+    #print(grafo.distancias)
+    #print(len(grafo.distancias))
+    algoritmo = A_estrella(grafo.datos, grafo.parking, grafo.dimensiones, grafo.distancias)
  
