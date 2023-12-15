@@ -183,6 +183,7 @@ def pasosRecorridos(inicio, fin, datos, dimensiones):
             if contador ==0:
                 expandido = Casilla(primeroLista, datos, dimensiones)
                 costeExpandido = distanciasMapa[expandido.posicion[0]][expandido.posicion[1]][0]
+                print("fallo",costeExpandido)
                 vecinos = expandido.operadores_disponibles
                 valor = abierta[0]
                 cerrada.append(abierta[0]) #marcaremos este estado expandido como cerrado
@@ -212,10 +213,47 @@ def pasosRecorridos(inicio, fin, datos, dimensiones):
             else:
                 abierta.remove(abierta[0])  #si ya ha sido expandido, simplemente se pasará al siguiente
         for posicion in cerrada:
+            if posicion[1] == fin:
+                solucion = posicion
             print(posicion)
+        print(solucion)
+        aplanada = aplanar_lista(solucion[2])
+        coordenadas = juntar(aplanada)
+        print(coordenadas)
+
+def aplanar_lista(nested_list):
+    result = []
+    for item in nested_list:
+        if isinstance(item, list):
+            result.extend(aplanar_lista(item))
+        
+        else:
+            result.append(item)
+    return result
+
+def juntar(aplanada):
+    contador =0 
+    lista = []
+    final =[]
+    for numero in aplanada:
+        if contador == 0:
+            lista.append(numero)
+            contador+= 1
+        elif contador == 1:
+            lista.append(numero)
+            final.append(lista.copy())
+            lista = []
+            contador = 0
+
+        print("el numero es", contador)
+        
+    return final
+
+
+
         
 
 nombre_archivo = 'parte2/entrada2.csv'
 #creamos el mapa con ese archivo
 grafo = Mapa(nombre_archivo)
-hola = pasosRecorridos([0,0],[3,3], grafo.datos, grafo.dimensiones)
+hola = pasosRecorridos([0,0],[3,1], grafo.datos, grafo.dimensiones)

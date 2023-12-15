@@ -1,7 +1,7 @@
 import csv
 import copy
-import heapq
-
+import time
+import sys
 class Mapa:
     #se crea la clase mapa
     def __init__(self, nombre_archivo):
@@ -500,8 +500,8 @@ def A_estrella(datos,parking,distancias):
     estadoActual = estadoPrimero
     while len(abierta) != 0 and (estadoActual[0] != list(parking) or len(estadoActual[1]) != 0 or len(estadoActual[5][0]) != 0): 
         estadoActual = abierta[0][1]
-        print("antes de todo la lista abierta", abierta[0])
-        print("siendo su estado actual",estadoActual[0])
+        #print("antes de todo la lista abierta", abierta[0])
+        #print("siendo su estado actual",estadoActual[0])
         abierta.remove(abierta[0])
         contador += 1
         vecinos = expandir(estadoActual, distancias, parking)
@@ -510,48 +510,185 @@ def A_estrella(datos,parking,distancias):
             heuristica = creacionDeHeuristica(distancias,sucesor)
             clave = sucesor[6] + heuristica
             abierta.append((clave, sucesor))
-        print("la lista de expandidos es", abierta[0])
-        print("condicion final",estadoActual[0],len(estadoActual[1]),len(estadoActual[5][0]))
+        #print("la lista de expandidos es", abierta[0])
+        #print("condicion final",estadoActual[0],len(estadoActual[1]),len(estadoActual[5][0]))
         abierta = sorted(abierta, key=lambda x:x[0])
     return estadoActual[7], contador
 
-def ficheroSalida(pasos, dimensiones):
-    LongitudDelPlan = len(pasos[0])
-    NodosExpandidos = pasos[1]
-    
+def ficheroSalida(pasos, expandidos, dimensiones, datos, tiempo):
+    LongitudDelPlan = len(pasos)
+    NodosExpandidos = expandidos
+    TiempoTranscurrido = tiempo
+    PasosRecorridos = []
+    TiposPosicion = []
+    PasosEnergia = []
+    CosteFinal = 0
+
+    print("los pasos que recibe", pasos)
     coordenada_i= 0
     coordenada_j =1
-    for paso in len(pasos[0]-1):
-        caminos = pasosRecorridos(pasos[coordenada_i], pasos[coordenada_j], dimensiones)
+    for paso in pasos[:-1]:
+        #print(pasos[coordenada_i])
+        #print(pasos[coordenada_j])
+        caminos = pasosRecorridos(pasos[coordenada_i], pasos[coordenada_j], datos, dimensiones)
+        caminos.reverse()
+        #print(caminos)
+        coordenada_i += 1
+        coordenada_j += 1
+        for estado in caminos:
+            if not PasosRecorridos or PasosRecorridos[-1] != estado:
+                PasosRecorridos.append(estado)
+    #print(PasosRecorridos)
+    for casillas in PasosRecorridos:
+        tipo = datos[casillas[0]][casillas[1]]
+        TiposPosicion.append(tipo)
+    #print(TiposPosicion)
+    for costesFinales in TiposPosicion:
+        if costesFinales == 'P':
+            energia = 50
+            PasosEnergia.append(energia)
+        else:
+            if costesFinales == '2':
+                energia = PasosEnergia[-1] -2
+                PasosEnergia.append(energia)
+            else:
+                energia = PasosEnergia[-1] -1
+                PasosEnergia.append(energia)
+    for costesFinales in TiposPosicion[1:]:
+        if costesFinales == '2':
+            CosteFinal += 2
+        else:
+            CosteFinal += 1
+    #print(CosteFinal)
+    #print(PasosEnergia)
+    # Escribir la información en un archivo
+    with open('informe.txt', 'w') as archivo:
+        archivo.write(f"Tiempo total: {TiempoTranscurrido}\n")
+        archivo.write(f"Coste total: {CosteFinal}\n")
+        archivo.write(f"Longitud del plan: {LongitudDelPlan}\n")
+        archivo.write(f"Nodos expandidos: {NodosExpandidos}\n")
+
+    # Escribir la información detallada en otro archivo
+    with open('detalles.txt', 'w') as archivo_detalles:
+        for paso, tipo, energia in zip(PasosRecorridos, TiposPosicion, PasosEnergia):
+            fila = f"{paso}: {tipo}: {energia}\n"
+            archivo_detalles.write(fila)
+
+
+
+
 
 
 def pasosRecorridos(inicio, fin, datos, dimensiones):
     #se calcula la distancia minima que hay desde la posición pasada por parámetros, hasta todas las casillas del mapa
-        distanciasMapa=[]
-        #se creará una lista de listas del tamaño del mapa, pero en vez de guardar la posición, poserá el coste que se tarda en llegar a él
-        for fila in datos:
-            distancias = [[100, []] for _ in range(dimensiones[1]+1)]
-            distanciasMapa.append(distancias)
+    distanciasMapa=[]
+    #se creará una lista de listas del tamaño del mapa, pero en vez de guardar la posición, poserá el coste que se tarda en llegar a él
+    contador_x = 0
+    for fila in datos:
+        distancias = [[100, [[contador_x,y]]] for y in range(dimensiones[1]+1)]
+        distanciasMapa.append(distancias)
+        contador_x += 1
 
-        abierta = [(0, list(inicio))] 
-        distanciasMapa[inicio[0]][inicio[1]] =0
-        cerrada=[]   
-        while len(abierta) !=0:
-            #iremos desarrollando cada posición hacia sus posibles movimientos, sumandole el valor acumulado, y guardando el valor más pequeño
-            contador =0
-            primeroLista= abierta[0][1]
+    abierta = [(0, list(inicio))] 
+    distanciasMapa[inicio[0]][inicio[1]][0] =0
+    distanciasMapa[inicio[0]][inicio[1]][1] = inicio
+    cerrada=[]   
+    #print(datos)
+    #print(distanciasMapa)
+    while len(abierta) !=0:
+        #print("cerrada:",cerrada)
+        #iremos desarrollando cada posición hacia sus posibles movimientos, sumandole el valor acumulado, y guardando el valor más pequeño
+        contador =0
+        primeroLista= abierta[0][1]
+        #se comprobará que el estado solo se desarrollará si no ha sido desarrollado con anterioridad, evitando bucles
+        for estado in cerrada:
+            if primeroLista == estado[1]:
+                contador+=1
+        #print("voy a ver abierta", abierta)
+        if contador ==0:
+            #print("expandidos", primeroLista, datos, dimensiones)
+            expandido = Casilla(primeroLista, datos, dimensiones)
+            costeExpandido = distanciasMapa[expandido.posicion[0]][expandido.posicion[1]][0]
+            vecinos = expandido.operadores_disponibles
+            valor = abierta[0]
+            cerrada.append(abierta[0]) #marcaremos este estado expandido como cerrado
+            abierta.remove(abierta[0])
+            for estado in vecinos:
+                if estado!=None:
+                    #solo para los movientos posibles, obtendremos cuánto vale el moverse a cada uno de los vecinos
+                    tipo = datos[estado[0]][estado[1]]
+                    if tipo=="2":
+                        coste=2
+                    else:
+                        coste=1
+                    casillasRecorridas = distanciasMapa[estado[0]][estado[1]][1]
+                    #print("las casillas recorridas", casillasRecorridas)
+                    casillasRecorridasReal = distanciasMapa[valor[1][0]][valor[1][1]][1]
+                    #print("las casillas realmente", casillasRecorridasReal)
+                    coste_actual= distanciasMapa[estado[0]][estado[1]][0]
+                    casillasRecorridasNuevas = casillasRecorridas + [casillasRecorridasReal]
+                    #print("las casillas final", casillasRecorridasNuevas)
+                    costeAcumulado = costeExpandido+coste  #este coste de moverse al vecino, se le sumará al coste acumulado que tiene llegar al estado actual
+                    if costeAcumulado < coste_actual: #si este coste es menor que el que se tenía antes para llegar a ese estado, se actualiza
+                        distanciasMapa[estado[0]][estado[1]][0] = costeAcumulado
+                        distanciasMapa[estado[0]][estado[1]][1] = casillasRecorridasNuevas
+                        abierta.append((costeAcumulado, estado,casillasRecorridasNuevas))
+                    else:
+                        abierta.append((coste_actual, estado, casillasRecorridas))
+        else:
+            abierta.remove(abierta[0])  #si ya ha sido expandido, simplemente se pasará al siguiente
+    for posicion in cerrada:
+        if posicion[1] == fin:
+            solucion = posicion
+        #print(posicion)
+    #print(solucion)
+    aplanada = aplanar_lista(solucion[2])
+    coordenadas = juntar(aplanada)
+    return coordenadas
+
+def aplanar_lista(nested_list):
+    result = []
+    for item in nested_list:
+        if isinstance(item, list):
+            result.extend(aplanar_lista(item))
+        
+        else:
+            result.append(item)
+    return result
+
+def juntar(aplanada):
+    contador =0 
+    lista = []
+    final =[]
+    for numero in aplanada:
+        if contador == 0:
+            lista.append(numero)
+            contador+= 1
+        elif contador == 1:
+            lista.append(numero)
+            final.append(lista.copy())
+            lista = []
+            contador = 0
+
+        #print("el numero es", contador)
+    return final
 
         
 
 #--------------------------main-----------------------------------------------------    
 #aqui es donde ejecutaremos el programa
 if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        #print("Uso: python script.py <path_mapa.csv> <num-h>")
+        sys.exit(1)
     #lo primero es cargar el csv donde tenemos el mapa de prueba
-    nombre_archivo = 'parte2/entrada2.csv'
+    nombre_archivo = sys.argv[1]
     #creamos el mapa con ese archivo
     grafo = Mapa(nombre_archivo)
-    #print(grafo.distancias)
-    #print(len(grafo.distancias))
+    tiempo_inicio = time.time()
     algoritmo = A_estrella(grafo.datos, grafo.parking, grafo.distancias)
-    print(algoritmo)
-    #resultado = ficheroSalida(algoritmo)
+    tiempo_fin = time.time()
+    tiempo_transcurrido = tiempo_fin - tiempo_inicio
+    #print(tiempo_transcurrido)
+    #print(algoritmo)
+    resultado = ficheroSalida(algoritmo[0],algoritmo[1], grafo.dimensiones, grafo.datos, tiempo_transcurrido)
