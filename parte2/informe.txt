@@ -1,4 +1,4 @@
-Tiempo total: 0.10873866081237793
+Tiempo total: 0.014890670776367188
 Coste total: 24
 Longitud del plan: 7
 Nodos expandidos: 234

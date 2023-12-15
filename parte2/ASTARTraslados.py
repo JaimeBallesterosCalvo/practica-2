@@ -347,7 +347,7 @@ def expandir(estado, distancias, parking):
         else:
             if estadoActual != list(parking):
                 if len(rutaContagiados) == 0:
-                    print("me meto en el caso de en el que tengo un no contagiado")
+                    #print("me meto en el caso de en el que tengo un no contagiado")
                     for paciente in hojadeRuta[1]:#No contagiados
                         costeCasillaPacienteNoContagiado = buscarCoste(estado, distancias, paciente)
                         contador_i = -1
@@ -426,7 +426,7 @@ def expandir(estado, distancias, parking):
                     expandidos.append(estadoParking) #expandimos a parking
             else:
                 if len(rutaContagiados) == 0:
-                    print("me meto en el caso de en el que tengo un no contagiado")
+                    #print("me meto en el caso de en el que tengo un no contagiado")
                     for paciente in hojadeRuta[1]:#No contagiados
                         costeCasillaPacienteNoContagiado = buscarCoste(estado, distancias, paciente)
                         contador_i = -1
@@ -524,7 +524,7 @@ def ficheroSalida(pasos, expandidos, dimensiones, datos, tiempo):
     PasosEnergia = []
     CosteFinal = 0
 
-    print("los pasos que recibe", pasos)
+    #print("los pasos que recibe", pasos)
     coordenada_i= 0
     coordenada_j =1
     for paso in pasos[:-1]:
