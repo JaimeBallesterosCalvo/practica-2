@@ -210,25 +210,16 @@ def creacionDeHeuristica(distancia, estado):
     energia = estado[4]
     
     heuristica  = 0
-    """"
     for paciente in totalPacientes:
         for fila in distancia:
             if fila[0] == posicionActual:
                 for columna in fila[1]:
                     if columna[1]== paciente:
                         heuristica= max(heuristica,columna[0])
-    totalPacientesARecoger = 5*len(totalPacientes)
+    totalPacientesARecoger = max(0,len(totalPacientes)-1)
     heuristica += totalPacientesARecoger
-    if llevandoContagiados != 0:
-        heuristica += 1
-    if llevandoNoContagiados != 0:
-        heuristica += 1
-    parkingEnergia = 50 - energia
-    heuristica += parkingEnergia
-    """
-    totalPacientesARecoger = len(totalPacientes)
-    heuristica += totalPacientesARecoger
-    
+
+
     return heuristica
 
 def buscarCoste(estado,distancias, posicionFinal):
@@ -564,4 +555,3 @@ if __name__ == '__main__':
     algoritmo = A_estrella(grafo.datos, grafo.parking, grafo.distancias)
     print(algoritmo)
     #resultado = ficheroSalida(algoritmo)
- 
