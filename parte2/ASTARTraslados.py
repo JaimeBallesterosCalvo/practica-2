@@ -202,7 +202,7 @@ class Vehiculo:
     
 #--------------------------funciones-----------------------------------------------------    
 #desarrollo de las funciones que iremos utilizando
-def creacionDeHeuristica(distancia, estado):
+def creacionDeHeuristica1(distancia, estado):
     posicionActual = estado[0]
     totalPacientes = estado[5][0]
     llevandoContagiados = estado[3]
@@ -220,6 +220,19 @@ def creacionDeHeuristica(distancia, estado):
     heuristica += totalPacientesARecoger
 
 
+    return heuristica
+
+def creacionDeHeuristica2(distancia, estado):
+    posicionActual = estado[0]
+    totalPacientes = estado[5][0]
+    llevandoContagiados = estado[3]
+    llevandoNoContagiados = estado[2]
+    energia = estado[4]
+    
+    heuristica  = 0
+    totalPacientesARecoger = len(totalPacientes)
+    heuristica += totalPacientesARecoger
+    
     return heuristica
 
 def buscarCoste(estado,distancias, posicionFinal):
@@ -490,7 +503,7 @@ def expandir(estado, distancias, parking):
 
     return expandidos
 
-def A_estrella(datos,parking,distancias):
+def A_estrella(datos,parking,distancias, heuristicaUtilizada):
     contador = 0
     abierta = []
     vehiculo = Vehiculo(datos, parking)
@@ -507,7 +520,10 @@ def A_estrella(datos,parking,distancias):
         vecinos = expandir(estadoActual, distancias, parking)
         for sucesores in vecinos:
             sucesor = list(sucesores)
-            heuristica = creacionDeHeuristica(distancias,sucesor)
+            if heuristicaUtilizada == 1:
+                heuristica = creacionDeHeuristica1(distancias,sucesor)
+            else:
+                heuristica = creacionDeHeuristica2(distancias,sucesor)
             clave = sucesor[6] + heuristica
             abierta.append((clave, sucesor))
         #print("la lista de expandidos es", abierta[0])
@@ -515,7 +531,7 @@ def A_estrella(datos,parking,distancias):
         abierta = sorted(abierta, key=lambda x:x[0])
     return estadoActual[7], contador
 
-def ficheroSalida(pasos, expandidos, dimensiones, datos, tiempo):
+def ficheroSalida(pasos, expandidos, dimensiones, datos, tiempo, nombre_stat, nombre_output):
     LongitudDelPlan = len(pasos)
     NodosExpandidos = expandidos
     TiempoTranscurrido = tiempo
@@ -562,17 +578,17 @@ def ficheroSalida(pasos, expandidos, dimensiones, datos, tiempo):
     #print(CosteFinal)
     #print(PasosEnergia)
     # Escribir la información en un archivo
-    with open('informe.txt', 'w') as archivo:
+    with open(nombre_stat, 'w') as archivo:
         archivo.write(f"Tiempo total: {TiempoTranscurrido}\n")
         archivo.write(f"Coste total: {CosteFinal}\n")
         archivo.write(f"Longitud del plan: {LongitudDelPlan}\n")
         archivo.write(f"Nodos expandidos: {NodosExpandidos}\n")
 
     # Escribir la información detallada en otro archivo
-    with open('detalles.txt', 'w') as archivo_detalles:
+    with open(nombre_output, 'w') as archivo:
         for paso, tipo, energia in zip(PasosRecorridos, TiposPosicion, PasosEnergia):
             fila = f"{paso}: {tipo}: {energia}\n"
-            archivo_detalles.write(fila)
+            archivo.write(fila)
 
 
 
@@ -683,12 +699,13 @@ if __name__ == '__main__':
         sys.exit(1)
     #lo primero es cargar el csv donde tenemos el mapa de prueba
     nombre_archivo = sys.argv[1]
+    heuristicaUtilizada = sys.argv[2]
     #creamos el mapa con ese archivo
     grafo = Mapa(nombre_archivo)
     tiempo_inicio = time.time()
-    algoritmo = A_estrella(grafo.datos, grafo.parking, grafo.distancias)
+    algoritmo = A_estrella(grafo.datos, grafo.parking, grafo.distancias, heuristicaUtilizada)
     tiempo_fin = time.time()
     tiempo_transcurrido = tiempo_fin - tiempo_inicio
     #print(tiempo_transcurrido)
     #print(algoritmo)
-    resultado = ficheroSalida(algoritmo[0],algoritmo[1], grafo.dimensiones, grafo.datos, tiempo_transcurrido)
+    resultado = ficheroSalida(algoritmo[0],algoritmo[1], grafo.dimensiones, grafo.datos, tiempo_transcurrido, f"{nombre_archivo}-{heuristicaUtilizada}.stat",f"{nombre_archivo}-{heuristicaUtilizada}.output")
